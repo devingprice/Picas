@@ -65,7 +65,7 @@ function saveSvg(svgData, fileName) {
   downloadLink.click();
 }
 
-function Canvas({ text, color, width, height, fontSize, fontFamily, padding, bold, italic }) {
+function Canvas({ text, color, width, height, fontSize, fontFamily, fontWeight, padding, bold, italic }) {
 
   const canvas = useRef(null)
   const ctx = useRef(null)
@@ -91,7 +91,7 @@ function Canvas({ text, color, width, height, fontSize, fontFamily, padding, bol
   useEffect(() => {
     WebFont.load({
       google: {
-        families: [fontFamily]
+        families: [fontFamily+':100,200,300,400,500,600,700,800,900']
       },
       loading() {
         setLoadingFont(true)
@@ -106,19 +106,22 @@ function Canvas({ text, color, width, height, fontSize, fontFamily, padding, bol
     })
   }, [fontFamily])
 
-  useEffect(drawText, [text, color, fontFamily, width, height, padding, fontSize, bold, italic, offset])
+  useEffect(drawText, [text, color, fontFamily, fontWeight, width, height, padding, fontSize, bold, italic, offset])
 
   function drawText() {
     const measure = ctx.current.measureText(text)
 
     // const fontSize = height - padding * 2
     const fontProperties = []
-
+    
     if (italic) { fontProperties.push('italic') }
     if (bold) { fontProperties.push('bold') }
+    else { fontProperties.push(fontWeight) }
 
+    
     fontProperties.push(`${fontSize * 2}px`)
     fontProperties.push(fontFamily)
+    console.log(fontProperties.filter(Boolean).join(' '))
     ctx.current.font = fontProperties.filter(Boolean).join(' ');
     ctx.current.textAlign = 'center'
     ctx.current.textBaseline = 'middle'
@@ -173,6 +176,7 @@ function App({ fonts }) {
   const [color, setColor] = useInput('#c62828')
   const [fontFamily, setFontFamily] = useInput('Fredericka the Great')
   const [bold, setBold] = useInput(false, 'checked')
+  const [fontWeight, setFontWeight] = useInput('500')
   const [italic, setItalic] = useInput(true, 'checked')
 
   function random() {
@@ -203,6 +207,7 @@ function App({ fonts }) {
             color={color}
             fontFamily={fontFamily}
             fontSize={fontSize}
+            fontWeight={fontWeight}
             bold={bold}
             italic={italic}
           />
@@ -226,6 +231,20 @@ function App({ fonts }) {
                         )
                       })}
                     </optgroup>
+                  )
+                })}
+              </select>
+            </span>
+          </p>
+          <p className="control">
+            <span className="select">
+              <select onChange={setFontWeight} value={fontWeight}>
+                {['100', '200', '300', '400', '500', '600', '700', '800', '900']
+                  .map(weight => {
+                  return (
+                    <option key={weight} value={weight}>
+                      {weight}
+                    </option>
                   )
                 })}
               </select>
@@ -286,6 +305,7 @@ App.getInitialProps = async function () {
           sort: 'popularity'
         },
       })
+      console.log('received req')
       cache.updateAt = Date.now()
       cache.data = res.data.items.map(d => ({ name: d.family, category: d.category }))
       return {
